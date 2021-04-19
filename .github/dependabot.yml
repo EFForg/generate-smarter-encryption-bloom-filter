@@ -10,7 +10,7 @@ updates:
     assignees:
       - "hainish"
     commit-message:
-      prefix: "cargo-auto-update"
+      prefix: "cargo-update"
     labels:
       - "dependencies"
     pull-request-branch-name:
