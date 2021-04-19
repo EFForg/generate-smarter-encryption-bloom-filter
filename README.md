@@ -1,6 +1,6 @@
 # Generate Smarter Encryption Bloom Filter
 
-Created with Async Rust for optimal memory and saefty, this generates the bloom file needed for HTTPS Everywhere's DuckDuckGo Smarter Encryption update channel.
+Created with Async Rust for optimal memory and safety, this generates the bloom file needed for HTTPS Everywhere's DuckDuckGo Smarter Encryption update channel.
 
 ## Note for DuckDuckGo Data:
 
