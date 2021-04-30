@@ -19,3 +19,6 @@ futures-util = { version = "0.3", features = ["io"] }
 bytes = "^0.5"
 async-compression = { version = "0.3", features = ["stream", "gzip"] }
 async-tar = "0.3"
+
+[dev-dependencies]
+mktemp = "0.4"

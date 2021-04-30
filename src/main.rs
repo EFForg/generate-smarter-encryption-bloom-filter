@@ -46,8 +46,10 @@ fn write_metadata(json_value: Value, mut metadata_file: File) {
 
 type S = dyn Stream<Item = Result<bytes::Bytes, Error>> + Unpin;
 async fn fetch_mm_list() -> Result<HashSet<String>, Box<dyn std::error::Error>> {
-    let resp = http_stream("https://downloads.majestic.com/majestic_million.csv").await?;
+    fetch_csv_list(http_stream("https://downloads.majestic.com/majestic_million.csv").await?).await
+}
 
+async fn fetch_csv_list(resp: Box<S>) -> Result<HashSet<String>, Box<dyn std::error::Error>> {
     let mut reader = AsyncBufReader::new(resp.into_async_read());
     {
         let mut _header = String::new();
@@ -67,7 +69,10 @@ async fn fetch_mm_list() -> Result<HashSet<String>, Box<dyn std::error::Error>> 
 }
 
 async fn fetch_se_list_matches(mm_list: &HashSet<String>) -> Result<HashSet<String>, Box<dyn std::error::Error>> {
-    let resp = http_stream("https://staticcdn.duckduckgo.com/https/smarter_encryption_latest.tgz").await?;
+    fetch_tgz_list_matches(http_stream("https://staticcdn.duckduckgo.com/https/smarter_encryption_latest.tgz").await?, mm_list).await
+}
+
+async fn fetch_tgz_list_matches(resp: Box<S>, mm_list: &HashSet<String>) -> Result<HashSet<String>, Box<dyn std::error::Error>> {
     let tar = decompress_stream(resp);
     let file = untarred_file_from_stream(tar, "smarter_encryption_latest/smarter_encryption.txt").await?.unwrap();
 
@@ -145,4 +150,98 @@ async fn main() {
         ]
     });
     write_metadata(json, metadata_file);
+}
+
+#[cfg(test)]
+mod tests {
+    use futures_util::stream;
+    use mktemp::Temp;
+    use std::fs::{self, File};
+    use std::io::prelude::*;
+    use super::*;
+
+    fn create_bloom_mock() -> Bloom<str> {
+        let mut entries = HashSet::new();
+        entries.insert("A Dance With Dragons".to_string());
+        entries.insert("To Kill a Mockingbird".to_string());
+        entries.insert("The Odyssey".to_string());
+        entries.insert("The Great Gatsby".to_string());
+        let items_count = 4;
+        let fp_rate = 0.001;
+
+        create_bloom_filter(entries, items_count, fp_rate)
+    }
+
+    fn create_file_mock() -> (Temp, File, String) {
+        let temp_dir = Temp::new_dir().unwrap();
+        let mut temp_path_buf = temp_dir.to_path_buf();
+        temp_path_buf.push("temp_file");
+        let temp_file_str = temp_path_buf.to_str().unwrap();
+
+        (temp_dir, create_file(temp_file_str, "test", "TESTFILE"), String::from(temp_file_str))
+    }
+
+    fn file_read(file: &str) -> Result<bytes::Bytes, Error> {
+        let mut f = File::open(file)?;
+        let mut buffer = Vec::new();
+        f.read_to_end(&mut buffer)?;
+        let file_bytes = bytes::Bytes::from(buffer);
+        Ok(file_bytes)
+    }
+
+    fn file_stream(file: &str) -> Box<S> {
+        Box::new(stream::iter(vec![file_read(file)]))
+    }
+
+    #[test]
+    fn creates_file_successfully() {
+        let (_t, _, temp_file_str) = create_file_mock();
+        assert!(File::open(&temp_file_str).is_ok());
+    }
+
+    #[test]
+    fn create_bloom_filter_succeeds() {
+        let bf = create_bloom_mock();
+        assert_eq!(bf.check("The Great Gatsby"), true);
+    }
+
+    #[test]
+    fn write_outfile_succeeds() {
+        let bf = create_bloom_mock();
+        let (_t, temp_file, temp_file_str) = create_file_mock();
+        write_outfile(&bf, temp_file);
+        let metadata = fs::metadata(temp_file_str).unwrap();
+        assert_eq!(metadata.len(), 8);
+    }
+
+    #[test]
+    fn write_metadata_succeeds() {
+        let (_t, temp_file, temp_file_str) = create_file_mock();
+        let json = json!({
+            "foo": 1,
+            "bar": [true, "baz"]
+        });
+        write_metadata(json, temp_file);
+        let contents = fs::read_to_string(temp_file_str).unwrap();
+        assert_eq!(contents, "{\"bar\":[true,\"baz\"],\"foo\":1}");
+    }
+
+    #[tokio::test]
+    async fn fetch_csv_list_succeeds() {
+        let csv_file_stream = file_stream("test/m50.csv");
+        let csv_list = fetch_csv_list(csv_file_stream).await.unwrap();
+        assert!(csv_list.contains("en.wikipedia.org"));
+    }
+
+
+    #[tokio::test]
+    async fn fetch_tgz_list_matches_succeeds() {
+        let csv_file_stream = file_stream("test/m50.csv");
+        let csv_list = fetch_csv_list(csv_file_stream).await.unwrap();
+
+        let matches_file_stream = file_stream("test/se100.tgz");
+        let matches = fetch_tgz_list_matches(matches_file_stream, &csv_list).await.unwrap();
+        assert!(matches.contains("en.wikipedia.org"));
+        assert!(!matches.contains("mozilla.org"));
+    }
 }
