@@ -244,4 +244,14 @@ mod tests {
         assert!(matches.contains("en.wikipedia.org"));
         assert!(!matches.contains("mozilla.org"));
     }
+
+    #[tokio::test]
+    async fn simple_reqwest_succeeds() {
+        let example_resp = reqwest::get("https://www.example.com/")
+            .await.unwrap()
+            .error_for_status().unwrap()
+            .text()
+            .await.unwrap();
+        assert!(example_resp.len() > 0);
+    }
 }
