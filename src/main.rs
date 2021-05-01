@@ -1,4 +1,3 @@
-use async_compression::stream::GzipDecoder;
 use async_tar::Archive;
 use bloomfilter::Bloom;
 use futures_util::{AsyncBufReadExt, StreamExt, TryStreamExt};
@@ -98,7 +97,11 @@ async fn http_stream(url: &str) -> Result<Box<S>, Box<dyn std::error::Error>> {
 }
 
 fn decompress_stream(inflow: Box<S>) -> Box<S> {
-    Box::new(GzipDecoder::new(inflow))
+    Box::new(tokio_util::io::ReaderStream::new(
+        async_compression::tokio::bufread::GzipDecoder::new(
+            tokio_util::io::StreamReader::new(inflow)
+        )
+    ))
 }
 
 async fn untarred_file_from_stream(inflow: Box<S>, filename: &str) -> Result<Option<Box<dyn AsyncRead + Unpin>>, Box<dyn std::error::Error>> {
