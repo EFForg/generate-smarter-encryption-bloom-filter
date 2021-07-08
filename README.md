@@ -1,6 +1,6 @@
 # Generate Smarter Encryption Bloom Filter
 
-[![Build Status](https://api.travis-ci.com/EFForg/generate-smarter-encryption-bloom-filter.svg?branch=master)](https://travis-ci.org/efforg/https-everywhere-lib-core)
+[![CI](https://github.com/EFForg/generate-smarter-encryption-bloom-filter/actions/workflows/ci.yml/badge.svg)](https://github.com/EFForg/generate-smarter-encryption-bloom-filter/actions/workflows/ci.yml)
 
 Created with Async Rust for optimal memory and safety, this generates the bloom file needed for HTTPS Everywhere's DuckDuckGo Smarter Encryption update channel.
 
