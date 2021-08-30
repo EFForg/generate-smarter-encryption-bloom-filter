@@ -129,9 +129,9 @@ async fn main() {
     let outfile = create_file(&args[1], &args[0], "OUTFILE");
     let metadata_file = create_file(&format!("{}.json", &args[1]), &args[0], "metadata file OUTFILE.json");
 
-    println!("Downoading and parsing Majestic Million list...");
+    println!("Downloading and parsing Majestic Million list...");
     let mm_list = fetch_mm_list().await.unwrap();
-    println!("Downoading and parsing Smarter Encryption list...");
+    println!("Downloading and parsing Smarter Encryption list...");
     let se_list_matches = fetch_se_list_matches(&mm_list).await.unwrap();
     
     let fp_rate = 0.0000001;
