@@ -190,12 +190,12 @@ dependencies = [
 
 [[package]]
 name = "bloomfilter"
-version = "1.0.5"
+version = "1.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1cffe85a8b173164000edb6570ff7cf429acc9460b41d963e797df413f1765b4"
+checksum = "cf8588271abb26f506ed8138489f31a3a3d60883f1734f241234825eeec82931"
 dependencies = [
  "bit-vec",
- "rand",
+ "getrandom",
  "siphasher",
 ]
 
@@ -1137,9 +1137,9 @@ dependencies = [
 
 [[package]]
 name = "siphasher"
-version = "0.3.6"
+version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "729a25c17d72b06c68cb47955d44fda88ad2d3e7d77e025663fdd69b93dd71a1"
+checksum = "533494a8f9b724d33625ab53c6c4800f7cc445895924a8ef649222dcb76e938b"
 
 [[package]]
 name = "slab"
