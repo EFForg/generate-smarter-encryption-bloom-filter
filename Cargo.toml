@@ -22,4 +22,4 @@ async-tar = "0.4"
 tokio-util = { version = "0.7", features = ["io"] }
 
 [dev-dependencies]
-mktemp = "0.4"
+mktemp = "0.5"
